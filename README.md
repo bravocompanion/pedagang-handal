@@ -61,3 +61,15 @@ Pembaruan ini telah diunggah ke GitHub, **belum merupakan bukti bahwa login nyat
 - Jangan commit file `.env`, private key, service_role, database password, atau kredensial toko aplikasi.
 - Gunakan Supabase publishable key **hanya bersama RLS**.
 - Backup data sebelum mengganti skema atau menguji migrasi.
+
+## Deployment web otomatis — Cloudflare Pages
+
+Proyek web statis ini siap dihubungkan melalui Cloudflare Pages **Git integration**. Setelah akun Cloudflare mengotorisasi repository GitHub, setiap push ke `main` akan memicu deployment otomatis.
+
+- Panduan lengkap: [CLOUDFLARE_DEPLOY.md](CLOUDFLARE_DEPLOY.md)
+- Folder output Pages: `preview`
+- Branch produksi: `main`
+- Build command: kosong (HTML statis)
+- Pemeriksaan GitHub Actions: `.github/workflows/verify-web.yml`
+
+**Status:** Kode dan dokumentasi sudah diunggah. Aktivasi Cloudflare, domain HTTPS, dan deployment pertama masih harus diselesaikan di dashboard akun Cloudflare.
