@@ -1,25 +1,63 @@
 # Pedagang Handal
 
-Aplikasi kalkulator HPP & analisis keuntungan UMKM.
+Aplikasi mobile untuk menghitung **Harga Pokok Produksi (HPP)**, harga jual, dan keuntungan UMKM.
 
-## Status
+**Versi aplikasi:** v1.5.1 — Login Fix (Batch 1 Foundation & Stability + Batch 2 HPP Professional).
 
-Versi terbaru: **v1.5.1 — Login Fix** (17 Oktober 2026).
+## Fitur utama
 
-- Kalkulasi HPP Professional: biaya bahan, tenaga kerja, kemasan, overhead, susut produksi, biaya marketplace, simulasi laba, histori harga bahan.
-- Formulir Sign In / Sign Up / Reset Password terhubung ke Supabase Auth.
-- Sinkronisasi cloud memakai snapshot revision + RLS (memerlukan penerapan migrasi SQL pada proyek Supabase).
+- Produk, bahan, kemasan, tenaga kerja, overhead, biaya tetap dan variabel.
+- Susut, gagal produksi, biaya marketplace, transaksi, diskon, dan subsidi ongkir.
+- Harga jual dengan target margin/markup, harga impas, simulasi laba dan kenaikan biaya.
+- Histori harga bahan dan perbandingan kanal penjualan.
+- Daftar, masuk, keluar, lupa password melalui Supabase Auth.
+- Snapshot cloud per akun dengan revision dan RLS (SQL harus diterapkan di proyek Supabase).
+- Preview HTML responsif dan pembungkus Android/iOS melalui Expo React Native.
 
-> **Penting:** Preview HTML dapat diuji di browser; pengujian Supabase nyata dan build APK/AAB belum dinyatakan lulus.
+## Pratinjau HTML
 
-## Menjalankan preview
+Jalankan dari root repository:
 
-Buka [preview/index.html](preview/index.html) melalui HTTP/HTTPS (contoh `python -m http.server 8000` dari root repo). Daftar/Login membutuhkan proyek Supabase yang dikonfigurasi pada build.
+```bash
+python -m http.server 8000
+```
+
+Buka **http://localhost:8000/preview/**. Preview ini berisi konfigurasi **publishable** Supabase Pedagang Handal yang aman untuk aplikasi publik apabila RLS dikonfigurasi dengan benar. Jangan gunakan kunci secret/service_role di frontend.
+
+## Jalankan Android/iOS (Expo)
+
+```bash
+cd mobile
+cp .env.example .env
+# Edit .env dan isi EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY proyek Pedagang Handal
+npm install
+npx expo start --clear
+```
+
+Untuk membangun APK atau AAB, siapkan akun Expo EAS dan ganti Android package / iOS bundle identifier **com.example.pedaganghandal** sebelum merilis. Jalankan `npx eas-cli build --platform android --profile preview` untuk APK uji dan `--profile production` untuk AAB produksi setelah validasi.
+
+## Supabase
+
+1. Buka proyek **Pedagang Handal**, bukan proyek BravoTax.
+2. Jalankan `supabase/01_create_product_snapshots.sql` dari SQL Editor bila tabel belum ada.
+3. Jalankan `supabase/02_batch1_revision_rls.sql` untuk kolom revision dan kebijakan akses per pengguna.
+4. Aktifkan Email Auth; konfigurasi URL redirect HTTPS untuk pemulihan password.
+5. Uji dua akun berbeda, sinkronisasi lintas perangkat, dan kebijakan RLS di database nyata.
+
+## Struktur repository
+
+- `preview/index.html` — pratinjau HTML interaktif v1.5.1.
+- `mobile/App.tsx` — WebView + bridge native untuk sesi, simpan data, PDF, dan backup.
+- `mobile/src/appHtml.ts` — UI aplikasi yang dibundel ke mobile.
+- `mobile/app.json`, `mobile/eas.json` — konfigurasi Expo dan build.
+- `supabase/*.sql` — skema dan kebijakan keamanan database.
+
+## Status pengujian
+
+Pembaruan ini telah diunggah ke GitHub, **belum merupakan bukti bahwa login nyata, RLS produksi, atau build APK/AAB lulus**. Pengujian browser dan respons server tiruan dilakukan pada paket lokal sebelum publikasi repository. Lakukan pengujian build ulang dari isi repository sebelum distribusi.
 
 ## Keamanan
 
-Jangan pernah commit `.env`, secret key, service_role key, database password, atau access token. Gunakan hanya Supabase publishable key pada frontend dan aktifkan RLS pada setiap tabel.
-
-## Proyek Android
-
-Paket sumber mobile v1.5.1 tersedia dari arsip rilis aplikasi yang disiapkan terpisah. Repository dapat digunakan untuk melacak revisi dan menerima source code Android secara bertahap. Saat berkas Android lengkap diunggah, jalankan `npm install` dan `npx expo start` dari direktori `mobile`.
+- Jangan commit file `.env`, private key, service_role, database password, atau kredensial toko aplikasi.
+- Gunakan Supabase publishable key **hanya bersama RLS**.
+- Backup data sebelum mengganti skema atau menguji migrasi.
