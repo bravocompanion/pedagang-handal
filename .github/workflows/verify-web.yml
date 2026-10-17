@@ -1,0 +1,31 @@
+name: Verifikasi Web Pedagang Handal
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "preview/**"
+      - "scripts/check-web.mjs"
+      - ".github/workflows/verify-web.yml"
+  pull_request:
+    paths:
+      - "preview/**"
+      - "scripts/check-web.mjs"
+      - ".github/workflows/verify-web.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validasi preview dan sintaks JavaScript
+        run: node scripts/check-web.mjs
