@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "Pedagang Handal",
+    "slug": "pedagang-handal",
+    "scheme": "pedaganghandal",
+    "version": "1.5.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F3F6F9",
+    "android": {
+      "package": "com.example.pedaganghandal",
+      "edgeToEdgeEnabled": false,
+      "softwareKeyboardLayoutMode": "resize",
+      "versionCode": 16
+    },
+    "ios": {
+      "bundleIdentifier": "com.example.pedaganghandal",
+      "supportsTablet": true,
+      "buildNumber": "16"
+    },
+    "plugins": [
+      "expo-file-system",
+      "expo-secure-store"
+    ]
+  }
+}
