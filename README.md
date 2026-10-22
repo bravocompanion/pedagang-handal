@@ -2,7 +2,7 @@
 
 Aplikasi mobile untuk menghitung **Harga Pokok Produksi (HPP)**, harga jual, dan keuntungan UMKM.
 
-**Versi aplikasi:** v1.5.2 — Login Fix (Batch 1 Foundation & Stability + Batch 2 HPP Professional).
+**Versi aplikasi:** v1.5.3 — Login Fix (Batch 1 Foundation & Stability + Batch 2 HPP Professional).
 
 ## Fitur utama
 
@@ -83,3 +83,13 @@ Proyek web statis ini siap dihubungkan melalui Cloudflare Pages **Git integratio
 - **Pack gambar Oyen asli dari percakapan terdahulu belum tersedia sebagai file** sehingga yang terpasang saat ini adalah fallback vektor. Untuk mengganti desain dengan pack asli, kirim file PNG/SVG dan bundel ulang HTML serta sumber Expo.
 - Browser deploy otomatis Cloudflare memakai folder `preview/` pada branch `main`. Web dan Expo WebView menampilkan maskot tanpa memuat CDN.
 - **Belum lolos validasi APK/AAB atau akun Supabase nyata.** Jangan menganggap source terbaru siap produksi tanpa pengujian perangkat.
+
+
+## Oyen Library v1.5.3
+
+- Semua ikon fungsional (navigasi, tombol, laporan, pencarian, dan lainnya) diarahkan ke komponen ikon kucing Oyen yang terpusat.
+- Fitur Pengaturan → **Impor gambar Oyen asli** menerima 8 PNG/JPEG/WebP, mengenali nama `image-gen-1` hingga `image-gen-8`, mengubahnya menjadi WebP ringan, lalu mencoba menyimpan di browser masing-masing.
+- Pemetaan sumber original: [assets/icons/original/manifest.json](assets/icons/original/manifest.json).
+- Bundling permanen ke website dan source mobile: `python scripts/bundle_library_icons.py` setelah PNG asli disalin ke `assets/icons/original/`.
+- **Batas penting:** delapan gambar asli ditemukan di Library, tetapi byte gambar belum dapat diekspor sehingga belum disertakan di repo. Sampai itu terjadi, SVG fallback kucing Oyen tetap digunakan. Kode siap, aset original belum terkirim.
+- **Belum diverifikasi:** login Supabase produksi, penyimpanan gambar original setelah restart aplikasi di semua perangkat, serta APK/AAB Play Store.
