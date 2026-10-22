@@ -1,0 +1,59 @@
+{
+  "version": "1.5.3",
+  "source": "Chat proyek sebelah / ChatGPT Library (2026-10-16)",
+  "original_images_discovered": 8,
+  "original_images_currently_embedded": 0,
+  "note": "Original PNG raw bytes could not be materialized from Project Library. App has importer and SVG fallback; this repo does NOT contain original PNG yet.",
+  "slots": [
+    {
+      "slot": "welcome",
+      "library_file": "image-gen-1(20261016-170027).png",
+      "filename": "welcome.png",
+      "used_for": "Welcome, home, products"
+    },
+    {
+      "slot": "tutorial",
+      "library_file": "image-gen-2(20261016-170032).png",
+      "filename": "tutorial.png",
+      "used_for": "Tutorial and reports"
+    },
+    {
+      "slot": "warning",
+      "library_file": "image-gen-3(20261016-170037).png",
+      "filename": "warning.png",
+      "used_for": "Notifications and warnings"
+    },
+    {
+      "slot": "success",
+      "library_file": "image-gen-4(20261016-170043).png",
+      "filename": "success.png",
+      "used_for": "Success, save and sync"
+    },
+    {
+      "slot": "error",
+      "library_file": "image-gen-5(20261016-170048).png",
+      "filename": "error.png",
+      "used_for": "Errors and destructive actions"
+    },
+    {
+      "slot": "thinking",
+      "library_file": "image-gen-6(20261016-170053).png",
+      "filename": "thinking.png",
+      "used_for": "Calculator and analysis"
+    },
+    {
+      "slot": "offline",
+      "library_file": "image-gen-7(10).png",
+      "filename": "offline.png",
+      "used_for": "Offline and loading"
+    },
+    {
+      "slot": "celebrate",
+      "library_file": "image-gen-8(10).png",
+      "filename": "celebrate.png",
+      "used_for": "Profit and milestones"
+    }
+  ],
+  "build_command": "python scripts/bundle_library_icons.py",
+  "browser_import": "Settings → Impor gambar Oyen asli"
+}
