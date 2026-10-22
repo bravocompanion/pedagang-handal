@@ -2,7 +2,7 @@
 
 Aplikasi mobile untuk menghitung **Harga Pokok Produksi (HPP)**, harga jual, dan keuntungan UMKM.
 
-**Versi aplikasi:** v1.5.3 — Login Fix (Batch 1 Foundation & Stability + Batch 2 HPP Professional).
+**Versi aplikasi:** v1.5.4 — Login Fix (Batch 1 Foundation & Stability + Batch 2 HPP Professional).
 
 ## Fitur utama
 
@@ -93,3 +93,13 @@ Proyek web statis ini siap dihubungkan melalui Cloudflare Pages **Git integratio
 - Bundling permanen ke website dan source mobile: `python scripts/bundle_library_icons.py` setelah PNG asli disalin ke `assets/icons/original/`.
 - **Batas penting:** delapan gambar asli ditemukan di Library, tetapi byte gambar belum dapat diekspor sehingga belum disertakan di repo. Sampai itu terjadi, SVG fallback kucing Oyen tetap digunakan. Kode siap, aset original belum terkirim.
 - **Belum diverifikasi:** login Supabase produksi, penyimpanan gambar original setelah restart aplikasi di semua perangkat, serta APK/AAB Play Store.
+
+
+## Oyen Pack ZIP v1.5.4
+
+- Menu Pengaturan menerima satu ZIP berisi 8 gambar Oyen asli atau 8 PNG sekaligus (tanpa CDN).
+- Perangkat yang mengimpor langsung menampilkan gambarnya dalam navigasi, tombol dan status.
+- Bundling permanen website, Expo WebView dan launcher: `python scripts/bundle_library_icons.py --zip PATH_TO_ORIGINAL_PACK.zip`.
+- **Pack original belum ada dalam source repository.** Library chat lama hanya memberi preview, bukan byte PNG; rilis ini masih memakai SVG fallback sampai ZIP original diberikan. Jangan salah menyebut fallback sebagai gambar asli.
+- [Panduan lengkap dan keterbatasan](README_ORIGINAL_OYEN.md).
+- Native APK/AAB dan Supabase produksi masih membutuhkan pengujian mandiri.
