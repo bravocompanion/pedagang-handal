@@ -122,12 +122,7 @@ button,.nav button,.btn,.back,.cost-line .remove,.mini-more,.category-label butt
 <div id="app" class="loading">Menyiapkan Pedagang Handal…</div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <input id="backup-file" type="file" accept="application/json,.json" class="hidden" aria-label="Impor cadangan data">
-<script>
-window.PEDAGANG_CONFIG = {"url": "https://cncwhersxduslivnwbft.supabase.co", "publishableKey": "sb_publishable_mMKIvcehPvlVxFrCctP6Sw_NfT-L8Jv",
-  resetPasswordUrl: ""
-};
-
-</script>
+<script src="./config.js"></script>
 <script>
 (()=>{'use strict';
 const STORAGE='hpp-master-v1'; // Legacy/demo data tetap dipertahankan
@@ -169,29 +164,78 @@ async function oyenFileData(file){
   img.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Gambar tidak dapat dibaca.'))};img.src=url;
  });
 }
+// Import one ZIP from the Oyen icon-pack chat, or eight selected PNG/WebP images.
+// ZIP parsing is local-only: no image or account data is sent to a third-party service.
+async function oyenReadZip(file){
+ if(file.size>45*1024*1024)throw Error('ZIP terlalu besar (maksimal 45 MB).');
+ const raw=await file.arrayBuffer(),bytes=new Uint8Array(raw),dv=new DataView(raw);
+ const get16=pos=>dv.getUint16(pos,true),get32=pos=>dv.getUint32(pos,true);
+ let eocd=-1;
+ for(let i=raw.byteLength-22;i>=Math.max(0,raw.byteLength-65557);i--){
+  if(get32(i)===0x06054b50){eocd=i;break;}
+ }
+ if(eocd<0)throw Error('ZIP tidak dapat dibaca. Pilih file ZIP asli atau delapan gambar PNG.');
+ const count=get16(eocd+10),central=get32(eocd+16);
+ if(count>200||central>=raw.byteLength)throw Error('Struktur ZIP tidak didukung.');
+ let p=central,total=0;const result=[];
+ for(let i=0;i<count;i++){
+  if(p+46>raw.byteLength||get32(p)!==0x02014b50)throw Error('Data ZIP rusak.');
+  const flags=get16(p+8),method=get16(p+10),comp=get32(p+20),size=get32(p+24),n=get16(p+28),extra=get16(p+30),comment=get16(p+32),offset=get32(p+42);
+  if(p+46+n+extra+comment>raw.byteLength)throw Error('Nama file ZIP rusak.');
+  const name=new TextDecoder('utf-8').decode(bytes.subarray(p+46,p+46+n)).split('/').pop();
+  p+=46+n+extra+comment;
+  if(!/\.(png|jpe?g|webp)$/i.test(name)||!name||name.startsWith('.'))continue;
+  if(flags&1)throw Error('ZIP terenkripsi tidak didukung.');
+  if(![0,8].includes(method))throw Error('Jenis kompresi ZIP tidak didukung.');
+  if(size>12*1024*1024||comp>12*1024*1024)throw Error('Gambar dalam ZIP terlalu besar.');
+  total+=size;if(total>60*1024*1024||result.length>=24)throw Error('Terlalu banyak gambar dalam ZIP.');
+  if(offset+30>raw.byteLength||get32(offset)!==0x04034b50)throw Error('Indeks ZIP rusak.');
+  const dataStart=offset+30+get16(offset+26)+get16(offset+28);
+  if(dataStart+comp>raw.byteLength)throw Error('Isi ZIP tidak lengkap.');
+  const payload=bytes.slice(dataStart,dataStart+comp);
+  let inflated=payload;
+  if(method===8){
+   if(typeof DecompressionStream==='undefined')throw Error('Browser tidak mendukung ZIP otomatis. Ekstrak ZIP lalu pilih gambar PNG.');
+   try{inflated=new Uint8Array(await new Response(new Blob([payload]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());}
+   catch{throw Error('Tidak dapat mengekstrak ZIP di browser ini. Ekstrak ZIP lalu pilih semua PNG.');}
+  }
+  if(inflated.byteLength!==size)throw Error('Ukuran gambar ZIP tidak cocok.');
+  const ext=name.split('.').pop().toLowerCase(),mime=ext==='png'?'image/png':ext==='webp'?'image/webp':'image/jpeg';
+  result.push(new File([inflated],name,{type:mime}));
+ }
+ if(!result.length)throw Error('Tidak ada gambar PNG/JPG/WebP dalam ZIP.');
+ return result;
+}
 async function oyenImportFiles(input){
- const files=Array.from(input.files||[]);if(!files.length)return;
+ const selected=Array.from(input.files||[]);if(!selected.length)return;
+ let files=[];
+ for(const file of selected){
+  if(/\.zip$/i.test(file.name)){files.push(...await oyenReadZip(file));}
+  else files.push(file);
+ }
  const mapped={},slots=Object.keys(OYEN_ORIGINAL_LABELS);
  let sequential=0;
  for(const file of files){
-  const found=file.name.match(/(?:image-gen-|oyen-)([1-8])(?:\D|$)/i);
-  const direct=/^(welcome|tutorial|warning|success|error|thinking|offline|celebrate)(?:\.|-|_)/i.exec(file.name);
+  const base=file.name.split(/[\\/]/).pop();
+  const found=base.match(/(?:image-gen-|oyen[-_]?|icon[-_]?)([1-8])(?:\D|$)/i);
+  const direct=/^(welcome|tutorial|warning|success|error|thinking|offline|celebrate)(?:\.|-|_)/i.exec(base);
   const key=direct?direct[1].toLowerCase():found?slots[Number(found[1])-1]:slots[sequential++];
   if(!key||!(key in OYEN_ORIGINAL_LABELS))continue;
   mapped[key]=await oyenFileData(file);
  }
- const merged={...OYEN_ORIGINALS,...mapped};
- OYEN_ORIGINALS=merged;
- const persisted=oyenSave();
+ if(!Object.keys(mapped).length)throw Error('Tidak ada gambar Oyen dengan nama yang cocok.');
+ OYEN_ORIGINALS={...OYEN_ORIGINALS,...mapped};
+ const persisted=oyenSave(),count=oyenOriginalCount();
  render();
- notify(persisted?'Ikon Oyen berhasil diimpor: '+Object.keys(mapped).length+' ekspresi.':'Ikon tampil sementara. Penyimpanan browser tidak tersedia; gunakan HTTPS atau aplikasi mobile.');
+ notify(persisted?'Pack Oyen diimpor: '+count+'/8 gambar asli pada perangkat ini.':'Ikon tampil sementara, tetapi penyimpanan browser diblokir. Gunakan HTTPS atau aplikasi HP.');
 }
+
 function oyenResetIcons(){
  try{localStorage.removeItem(OYEN_ORIGINAL_STORE)}catch{}
  OYEN_ORIGINALS={...OYEN_PREBUNDLED};render();notify('Kembali ke ikon bawaan.');
 }
 const oyen=(kind='happy',size=64)=>`<span class="oyen-icon" role="img" aria-label="${OYEN_LABELS[kind]||'Oyen'}" style="--oyen-size:${Math.max(20,Math.min(160,Number(size)||64))}px">${oyenImage(kind)?`<img class="oyen-original" alt="" draggable="false" src="${oyenImage(kind)}">`:(OYEN_ASSETS[kind]||OYEN_ASSETS.happy)}</span>`;
-const iconGallery=()=>`<section class="panel icon-gallery" style="margin-top:16px"><div class="icon-gallery-head"><div><h2 class="subheading">Ikon kucing Oyen dari Library</h2><p class="helper">${oyenOriginalCount()}/8 ekspresi original terpasang. Pilih delapan PNG dari Library proyek untuk mengaktifkan gambarnya. Ikon bawaan tetap tersedia jika belum diimpor.</p></div>${oyen('celebrate',64)}</div><div class="oyen-import-controls"><label class="btn outline" for="oyen-import">Impor gambar Oyen asli</label><input id="oyen-import" type="file" accept="image/png,image/jpeg,image/webp" multiple aria-label="Impor delapan icon kucing dari Library"><button class="btn outline" type="button" data-action="oyen-reset">Reset ikon</button></div><div class="icon-grid">${Object.keys(OYEN_ASSETS).map(k=>`<div class="icon-item" title="${OYEN_LABELS[k]}">${oyen(k,66)}<small>${OYEN_LABELS[k]}</small></div>`).join('')}</div><p class="helper" style="margin-top:10px">Urutan asli: 1 Selamat datang, 2 Ide, 3 Peringatan, 4 Berhasil, 5 Gagal, 6 Bingung, 7 Offline, 8 Selebrasi. Semua ikon tombol dan navigasi menggunakan ekspresi Oyen sesuai konteks.</p></section>`;
+const iconGallery=()=>`<section class="panel icon-gallery" style="margin-top:16px"><div class="icon-gallery-head"><div><h2 class="subheading">Pack Ikon Kucing Oyen</h2><p class="helper"><strong>${oyenOriginalCount()}/8 gambar original aktif di perangkat ini.</strong> ${oyenOriginalCount()===8?'Semua gambar original telah digunakan pada perangkat ini.':'Ikon vektor cadangan masih digunakan jika original belum dipasang.'}</p></div>${oyen('celebrate',64)}</div><div class="oyen-import-controls"><label class="btn primary" for="oyen-import">Pasang pack Oyen (ZIP / 8 gambar)</label><input id="oyen-import" type="file" accept=".zip,image/png,image/jpeg,image/webp" multiple aria-label="Pasang pack ikon Oyen dari Library"><button class="btn outline" type="button" data-action="oyen-reset">Reset ikon</button></div><p class="helper" style="margin-top:6px">Unduh pack dari chat “Buat Pack Ikon Kucing”, lalu pilih ZIP-nya di sini. Impor berlaku untuk browser/HP ini; agar otomatis terpasang untuk semua pengguna, bundel PNG ke source sebelum deploy.</p><div class="icon-grid">${Object.keys(OYEN_ASSETS).map(k=>`<div class="icon-item" title="${OYEN_LABELS[k]}">${oyen(k,66)}<small>${OYEN_LABELS[k]}</small></div>`).join('')}</div></section>`;
 
 const ICONS={home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',box:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M9 5v5"/>',chart:'<path d="M4 20V9m5 11V4m5 16v-8m5 8V7"/>',settings:'<circle cx="12" cy="12" r="3"/><path d="M19 13.5l1.3 1-2 3.5-1.7-.6a8 8 0 0 1-2 1.1l-.3 1.8h-4l-.3-1.8a8 8 0 0 1-2-1.1l-1.7.6-2-3.5 1.3-1a8 8 0 0 1 0-2.9l-1.3-1 2-3.5 1.7.6a8 8 0 0 1 2-1.1l.3-1.8h4l.3 1.8a8 8 0 0 1 2 1.1l1.7-.6 2 3.5-1.3 1a8 8 0 0 1 0 2.9Z"/>',plus:'<path d="M12 5v14M5 12h14"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/>',arrow:'<path d="m15 18-6-6 6-6"/>',calculator:'<rect x="5" y="2" width="14" height="20" rx="3"/><rect x="8" y="5" width="8" height="4" rx="1"/><path d="M8 13h1m4 0h1m-6 4h1m4 0h1"/>',wallet:'<rect x="3" y="6" width="18" height="15" rx="3"/><path d="M3 10h18M7 6V4h11"/>',up:'<path d="M4 17 10 11l4 4 6-8M15 7h5v5"/>',download:'<path d="M12 3v13m-5-5 5 5 5-5M4 17v4h16v-4"/>',trash:'<path d="M3 6h18m-2 0-1 15H6L5 6m4 0V4h6v2m-5 4v7m4-7v7"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H6a2 2 0 0 0-2 2v10h4"/>',check:'<path d="m5 12 4 4L19 6"/>',file:'<path d="M6 2h8l4 4v16H6zM14 2v5h5M9 12h6m-6 4h6"/>',spark:'<path d="m12 2 2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z"/>',info:'<circle cx="12" cy="12" r="10"/><path d="M12 10v7M12 7h.01"/>'};
 const ico=(name,sz)=>`<span class="oyen-action-icon" aria-hidden="true">${oyen(OYEN_ACTION_MAPPING[name]||'welcome',Math.max(20,Number(sz)||22))}</span>`;
@@ -478,7 +522,7 @@ async function submitAuth(form){if(state.authBusy)return;const fd=new FormData(f
 async function logout(){const token=state.session?.access_token;state.cloudStatus='none';state.cloudRow=null;state.pendingSync=false;state.uid=null;state.authUser=null;state.products=[];state.loaded=false;state.editing=null;clearSession();authShow('login','Anda telah keluar dari akun.');if(token)try{await authRequest('/logout',null,'POST',token)}catch{}}
 function boot(){if(inNative){window.addEventListener('message',event=>{let data;try{data=typeof event.data==='string'?JSON.parse(event.data):event.data}catch{return}if(data?.type==='AUTH_SESSION')restoreSession(data.payload);if(data?.type==='DATA'&&data.uid===state.uid)void hydrate(data.payload);if(data?.type==='DATA_ERROR'&&data.uid===state.uid){state.uid=null;state.authUser=null;clearSession();authShow('login','Gagal membuka data akun: '+String(data.error||'Verifikasi gagal.'),true);}if(data?.type==='SAVE_RESULT'&&data.uid===state.uid&&data.seq===state.localSeq){state.localSaved=!!data.ok;if(!data.ok)notify('Penyimpanan perangkat gagal: '+String(data.error||'periksa memori perangkat.'));if(state.tab==='settings'&&state.loaded&&!state.editing)render();}});window.ReactNativeWebView.postMessage(JSON.stringify({type:'READY'}));}else{let raw=null;try{raw=sessionStorage.getItem(SESSION_STORE)}catch{}restoreSession(raw)}render();}
 const nav=[['home','Beranda','home'],['products','Produk','box'],['professional','HPP Pro','calculator'],['analysis','Analisis','chart'],['settings','Pengaturan','settings']];
-function shell(content,title,sub,action){return `<div class="app-shell"><aside class="sidebar"><div class="brand"><div class="brand-mark oyen-brand">${oyen('happy',44)}</div><div><b>Pedagang Handal</b><small>BISNIS LEBIH CERDAS</small></div></div><nav class="nav">${nav.map(([k,t,i])=>`<button data-tab="${k}" class="${state.tab===k&&!state.editing?'active':''}">${ico(i)}<span>${t}</span></button>`).join('')}</nav><div class="sidebar-footer">${oyen('tutorial',50)}<div><strong>${ico('spark',15)} Kelola margin lebih cerdas</strong><p>Data lokal per akun, dengan opsi sinkronisasi Supabase.</p></div></div></aside><main class="main"><div class="topline"><div><div class="eyebrow">PEDAGANG HANDAL · V1.5.3</div><h1 class="page-title">${title}</h1><p class="page-sub">${sub}</p></div><div class="top-actions">${action||''}<button class="avatar user-avatar" title="Buka pengaturan akun" data-tab="settings">${esc(userLabel().slice(0,2).toUpperCase())}</button></div></div>${content}</main><nav class="bottom-nav">${nav.map(([k,t,i])=>`<button data-tab="${k}" class="${state.tab===k&&!state.editing?'active':''}">${ico(i)}<span>${t}</span></button>`).join('')}</nav></div>`;}
+function shell(content,title,sub,action){return `<div class="app-shell"><aside class="sidebar"><div class="brand"><div class="brand-mark oyen-brand">${oyen('happy',44)}</div><div><b>Pedagang Handal</b><small>BISNIS LEBIH CERDAS</small></div></div><nav class="nav">${nav.map(([k,t,i])=>`<button data-tab="${k}" class="${state.tab===k&&!state.editing?'active':''}">${ico(i)}<span>${t}</span></button>`).join('')}</nav><div class="sidebar-footer">${oyen('tutorial',50)}<div><strong>${ico('spark',15)} Kelola margin lebih cerdas</strong><p>Data lokal per akun, dengan opsi sinkronisasi Supabase.</p></div></div></aside><main class="main"><div class="topline"><div><div class="eyebrow">PEDAGANG HANDAL · V1.5.4</div><h1 class="page-title">${title}</h1><p class="page-sub">${sub}</p></div><div class="top-actions">${action||''}<button class="avatar user-avatar" title="Buka pengaturan akun" data-tab="settings">${esc(userLabel().slice(0,2).toUpperCase())}</button></div></div>${content}</main><nav class="bottom-nav">${nav.map(([k,t,i])=>`<button data-tab="${k}" class="${state.tab===k&&!state.editing?'active':''}">${ico(i)}<span>${t}</span></button>`).join('')}</nav></div>`;}
 function prodCard(p,compact=false){const c=cost(p),ix=state.products.findIndex(x=>x.id===p.id);const badge=['☕','🍞','🥫','📦','🥤','🍲'][Math.abs(ix)%6];return `<button data-open="${esc(p.id)}" class="product-card"><div class="product-icon c${Math.abs(ix)%3+1}">${badge}</div><div class="product-info"><div class="product-name">${esc(p.name)}</div><div class="product-sub">${esc(p.batch)} ${esc(p.unit)} / produksi · HPP ${money(c.unit)}</div></div><div class="product-price cash">${money(c.price)}<small>Margin ${c.margin.toFixed(1)}%</small></div><span class="chev">›</span></button>`;}
 function home(){const total=state.products.length;const list=state.products.slice(0,4);const sumCost=state.products.reduce((s,p)=>s+cost(p).total,0);const margin=total?state.products.reduce((s,p)=>s+cost(p).margin,0)/total:0;const hero=`<section class="hero"><div class="hero-copy"><span class="tiny">✦ Kelola biaya dengan percaya diri</span><h2 class="big">Harga tepat.<br>Untung terukur.</h2><p>Hitung HPP dan tentukan harga jual yang sehat, tanpa spreadsheet rumit.</p></div><div class="hero-oyen">${oyen('profit',112)}</div><div class="hero-mini"><span>Rata-rata margin</span><b>${margin.toFixed(1)}%</b><small>Dari ${total} produk Anda</small></div></section>`;const stats=`<section class="stats"><div class="stat"><div class="stat-icon">${oyen('happy',38)}</div><div class="stat-label">Total produk</div><div class="stat-value cash">${total}</div><div class="stat-hint">Produk tersimpan</div></div><div class="stat"><div class="stat-icon gold">${oyen('profit',38)}</div><div class="stat-label">Biaya produksi</div><div class="stat-value cash">${money(sumCost)}</div><div class="stat-hint">Total satu batch/produk</div></div><div class="stat"><div class="stat-icon blue">${oyen('report',38)}</div><div class="stat-label">Rata-rata margin</div><div class="stat-value cash">${margin.toFixed(1)}%</div><div class="stat-hint">Harga rekomendasi</div></div></section>`;let recent=`<div><div class="section-top"><h2 class="section-title">Produk terbaru</h2><button class="link" data-tab="products">Lihat semua →</button></div>${total?`<div class="recent-list">${list.map(p=>prodCard(p,true)).join('')}</div>`:empty()}</div>`;let insight=`<div><div class="section-top"><h2 class="section-title">Ringkasan biaya</h2></div><div class="panel"><p class="subheading">Komposisi biaya</p><p class="helper">Akumulasi biaya bahan, kemasan, tenaga kerja, dan overhead.</p>${GROUPS.map(g=>{const v=state.products.reduce((s,p)=>s+cost(p).groups[g.key],0);return `<div class="bar-row"><span class="bar-label">${g.name}</span><div class="track"><div class="fill" style="width:${sumCost?v/sumCost*100:0}%;background:${g.color}"></div></div><span class="bar-value cash">${money(v)}</span></div>`}).join('')}</div></div>`;return shell(hero+stats+`<div class="two-cols">${recent}${insight}</div>`, 'Selamat datang 👋','Pantau biaya dan keuntungan produk bisnismu.',`<button class="btn primary" data-action="new">${ico('plus')}<span>Produk baru</span></button>`);}
 function empty(){return `<div class="empty"><div class="empty-ico oyen-empty">${oyen('empty',73)}</div><strong>Belum ada produk</strong><p>Tambahkan produk pertama untuk menghitung HPP dan harga jual.</p><button class="btn primary" data-action="new">${ico('plus')} Tambah produk</button></div>`;}
