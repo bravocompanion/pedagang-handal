@@ -1,0 +1,88 @@
+{
+  "version": "1.5.2",
+  "original_pack_available": false,
+  "description": "Fallback SVG mascots generated for UI integration. Original icon pack must be provided to replace.",
+  "assets": [
+    {
+      "id": "welcome",
+      "path": "assets/icons/oyen-welcome.svg"
+    },
+    {
+      "id": "happy",
+      "path": "assets/icons/oyen-happy.svg"
+    },
+    {
+      "id": "thinking",
+      "path": "assets/icons/oyen-thinking.svg"
+    },
+    {
+      "id": "success",
+      "path": "assets/icons/oyen-success.svg"
+    },
+    {
+      "id": "warning",
+      "path": "assets/icons/oyen-warning.svg"
+    },
+    {
+      "id": "error",
+      "path": "assets/icons/oyen-error.svg"
+    },
+    {
+      "id": "offline",
+      "path": "assets/icons/oyen-offline.svg"
+    },
+    {
+      "id": "cloud",
+      "path": "assets/icons/oyen-cloud.svg"
+    },
+    {
+      "id": "empty",
+      "path": "assets/icons/oyen-empty.svg"
+    },
+    {
+      "id": "profit",
+      "path": "assets/icons/oyen-profit.svg"
+    },
+    {
+      "id": "celebrate",
+      "path": "assets/icons/oyen-celebrate.svg"
+    },
+    {
+      "id": "tutorial",
+      "path": "assets/icons/oyen-tutorial.svg"
+    },
+    {
+      "id": "secure",
+      "path": "assets/icons/oyen-secure.svg"
+    },
+    {
+      "id": "search",
+      "path": "assets/icons/oyen-search.svg"
+    },
+    {
+      "id": "report",
+      "path": "assets/icons/oyen-report.svg"
+    },
+    {
+      "id": "marketplace",
+      "path": "assets/icons/oyen-marketplace.svg"
+    }
+  ],
+  "usage": {
+    "login": "welcome",
+    "signup": "celebrate",
+    "password_recovery": "secure",
+    "sidebar": "tutorial",
+    "hero": "profit",
+    "success": "success",
+    "warning": "warning",
+    "error": "error",
+    "offline": "offline",
+    "sync": "cloud",
+    "empty_products": "empty",
+    "search_empty": "search",
+    "business_report": "report",
+    "marketplace": "marketplace",
+    "settings_gallery": "all"
+  }
+}
