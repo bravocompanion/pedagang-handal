@@ -19,4 +19,7 @@ for (let i=0; i<scripts.length; i++) {
   const code = scripts[i][1].trim();
   if (code) new Script(code, {filename: 'preview/index.html:inline-script-' + (i+1)});
 }
+assert.match(html, /OYEN_ASSETS/, 'Maskot Oyen belum disematkan di HTML');
+assert.match(html, /iconGallery\(/, 'Galeri icon kit belum tersedia');
+assert.match(html, /oyen\('marketplace'/, 'Ikon konteks HPP Pro hilang');
 console.log('PASS: berkas Cloudflare, konfigurasi proyek, handler auth, dan sintaks JavaScript.');
