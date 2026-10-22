@@ -2,7 +2,7 @@
 
 Aplikasi mobile untuk menghitung **Harga Pokok Produksi (HPP)**, harga jual, dan keuntungan UMKM.
 
-**Versi aplikasi:** v1.5.1 — Login Fix (Batch 1 Foundation & Stability + Batch 2 HPP Professional).
+**Versi aplikasi:** v1.5.2 — Login Fix (Batch 1 Foundation & Stability + Batch 2 HPP Professional).
 
 ## Fitur utama
 
@@ -73,3 +73,13 @@ Proyek web statis ini siap dihubungkan melalui Cloudflare Pages **Git integratio
 - Pemeriksaan GitHub Actions: `.github/workflows/verify-web.yml`
 
 **Status:** Kode dan dokumentasi sudah diunggah. Aktivasi Cloudflare, domain HTTPS, dan deployment pertama masih harus diselesaikan di dashboard akun Cloudflare.
+
+
+## UI Oyen v1.5.2
+
+- 16 ekspresi maskot fallback Oyen telah digunakan dalam **login/daftar, dashboard, empty state, notifikasi, status cloud, HPP Pro, dan galeri Pengaturan**.
+- Icon UI bawaan untuk navigasi, tombol, ekspor, pencarian, dan editor tetap aktif.
+- Sumber aset SVG + pemetaan ekspresi: [assets/icons/manifest.json](assets/icons/manifest.json).
+- **Pack gambar Oyen asli dari percakapan terdahulu belum tersedia sebagai file** sehingga yang terpasang saat ini adalah fallback vektor. Untuk mengganti desain dengan pack asli, kirim file PNG/SVG dan bundel ulang HTML serta sumber Expo.
+- Browser deploy otomatis Cloudflare memakai folder `preview/` pada branch `main`. Web dan Expo WebView menampilkan maskot tanpa memuat CDN.
+- **Belum lolos validasi APK/AAB atau akun Supabase nyata.** Jangan menganggap source terbaru siap produksi tanpa pengujian perangkat.
